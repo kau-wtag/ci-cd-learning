@@ -1,15 +1,98 @@
+# =====================================================================
+# WORKFLOW: Hello CI
+# A minimal GitHub Actions workflow — Level 0 of CI/CD learning.
+# Goal: prove that "push code -> something runs automatically" works.
+# =====================================================================
+
+# The display name for this workflow, shown in the GitHub Actions tab.
+# Purely cosmetic — doesn't affect how anything runs.
 name: Hello CI
 
+# Defines WHEN this workflow should run (the trigger).
 on:
+  # Trigger type: run when someone pushes code to the repo.
   push:
+    # But only if the push was to the "main" branch specifically.
+    # [main] is shorthand list syntax for a list containing one item: "main".
+    # Equivalent longhand form:
+    #   branches:
+    #     - main
     branches: [main]
 
+# Starts the list of jobs to run. A workflow can have one or more jobs,
+# and by default they run in PARALLEL unless told to depend on each other
+# (using "needs:").
 jobs:
+
+  # The ID of this job — an arbitrary name I chose ("say-hello").
+  # Used internally to reference this job (e.g. if another job needed
+  # to depend on it, it would say: needs: say-hello).
   say-hello:
+
+    # Tells GitHub what machine to run this job on.
+    #
+    # "ubuntu-latest" = a fresh, temporary Ubuntu VIRTUAL MACHINE
+    # (NOT a Docker container), provisioned on demand and destroyed
+    # after the job finishes. GitHub maintains these VM images with
+    # common tools pre-installed (Node, Python, Git, Docker itself).
+    #
+    # NOTE: "Ubuntu" here means a full VM. This is a DIFFERENT use of
+    # the word "Ubuntu" than in a Dockerfile's "FROM ubuntu:latest",
+    # which refers to a Docker IMAGE (a container base layer), not a VM.
+    # VMs virtualize actual hardware and boot a full OS kernel; containers
+    # share the host's kernel and are lighter/faster to start.
+    #
+    # By default, my steps below run DIRECTLY on this VM's OS — no
+    # container involved. Docker only enters the picture if I either:
+    #   (a) add a "container:" key to this job (runs steps inside a
+    #       container instead of directly on the VM), or
+    #   (b) call "docker build" / "docker run" myself as a step —
+    #       using the Docker engine that's pre-installed on this VM.
     runs-on: ubuntu-latest
+
+    # Starts the list of steps this job will run, in order, top to bottom.
+    # Indentation is meaningful in YAML: steps are indented under the job,
+    # and each step's own properties are indented under that step.
     steps:
+
+      # --- Step 1 ---
+      # "name" is just a label for this step, shown in the Actions UI log.
       - name: Checkout code
+        # "uses" means: run a PREBUILT, REUSABLE Action someone else wrote,
+        # instead of a raw shell command.
+        #
+        # actions/checkout@v4 = official GitHub Action that copies this
+        # repo's code onto the runner machine. This matters because the
+        # VM starts out COMPLETELY EMPTY — without this step, none of my
+        # later steps (installing dependencies, running tests, building
+        # Docker images) would have any code to work with.
         uses: actions/checkout@v4
 
+      # --- Step 2 ---
       - name: Say hello
+        # "run" means: execute this raw shell command directly on the
+        # runner, as if typed into a normal Ubuntu terminal.
+        #
+        # "echo" just prints text to the terminal/log — this is exactly
+        # what appears in the step's output in the Actions tab.
         run: echo "Hello, my second pipeline ran!"
+
+# =====================================================================
+# KEY TAKEAWAYS
+# =====================================================================
+# 1. uses: vs run:
+#      uses:  -> call someone else's packaged, reusable Action
+#      run:   -> run your own raw shell command
+#    Almost every real pipeline mixes both.
+#
+# 2. Every job starts on a completely fresh, empty machine.
+#    That's why actions/checkout@v4 is almost always the FIRST step
+#    in any real-world workflow.
+#
+# 3. "ubuntu-latest" = a virtual machine, not a Docker container.
+#    Docker only gets involved if I explicitly use "container:" or
+#    call "docker build"/"docker run" as one of my own steps.
+#
+# 4. Indentation is not cosmetic in YAML — it defines structure.
+#    Getting it wrong changes meaning or breaks the file entirely.
+# =====================================================================
