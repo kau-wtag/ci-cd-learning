@@ -25,7 +25,15 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Build Docker image
-        run: docker build -t ci-cd-learning-app .
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ci-cd-learning-app:latest .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/ci-cd-learning-app:latest
 
 
