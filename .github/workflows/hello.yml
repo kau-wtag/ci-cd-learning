@@ -36,4 +36,3 @@ jobs:
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ci-cd-learning-app:latest .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/ci-cd-learning-app:latest
 
-
